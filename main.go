@@ -83,11 +83,16 @@ func CB() {
 	}
 	dir := os.Args[1]
 	start := time.Now()
-	ctx, cancel := context.WithTimeout(context.Background(), 400*time.Millisecond)
-	defer cancel()
 
 	workers := 30
-	resultc, errc := ConcurrentBoundedMd5All(ctx, dir, workers)
+	done := make(chan struct{})
+	resultc, errc := ConcurrentBoundedMd5All(done, dir, workers)
+
+	go func() {
+		<-time.After(time.Millisecond * 180)
+		fmt.Println("call to done from main")
+		close(done)
+	}()
 
 	pathMap := make(map[string][md5.Size]byte)
 	for result := range resultc {
@@ -99,10 +104,10 @@ func CB() {
 	}
 
 	end := time.Since(start)
+	fmt.Println("duration", end)
 
 	if err := <-errc; err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("duration", end)
 }
