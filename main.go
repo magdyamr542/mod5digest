@@ -89,7 +89,7 @@ func CB() {
 	resultc, errc := ConcurrentBoundedMd5All(done, dir, workers)
 
 	go func() {
-		<-time.After(time.Millisecond * 180)
+		<-time.After(time.Millisecond * 300)
 		fmt.Println("call to done from main")
 		close(done)
 	}()
@@ -108,6 +108,15 @@ func CB() {
 
 	if err := <-errc; err != nil {
 		log.Fatal(err)
+	}
+
+	var paths []string
+	for path := range pathMap {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	for _, path := range paths {
+		fmt.Printf("%x %s\n", pathMap[path], path)
 	}
 
 }
